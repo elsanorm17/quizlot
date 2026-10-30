@@ -8,6 +8,7 @@ const starterSets = [
   { set_id: 3, title: "World Geography", description: "A little trip around the world", question_count: 15, owner: "mapmaven", tag: "Geography", color: "yellow" },
   { set_id: 4, title: "Intro to Statistics", description: "Make sense of the numbers", question_count: 20, owner: "numbersnerd", tag: "Math", color: "orange" },
 ];
+const currentUser = "quizlot";
 
 export default function App() {
   const [sets, setSets] = useState(starterSets);
@@ -25,14 +26,18 @@ export default function App() {
       .catch(() => setApiStatus("demo"));
   }, []);
 
-  const visibleSets = useMemo(() => sets.filter((set) =>
-    `${set.title} ${set.description || ""} ${set.owner || ""} ${set.tag || ""}`.toLowerCase().includes(search.toLowerCase())
-  ), [sets, search]);
+  const mySets = useMemo(() => sets.filter((set) => set.owner?.toLowerCase() === currentUser), [sets]);
+  const visibleSets = useMemo(() => {
+    const availableSets = activeTab === "My study sets" ? mySets : sets;
+    return availableSets.filter((set) =>
+      `${set.title} ${set.description || ""} ${set.owner || ""} ${set.tag || ""}`.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [activeTab, mySets, search, sets]);
 
   function selectTab(tab) {
     setActiveTab(tab);
-    if (tab !== "Discover") setNotice(`${tab} is part of the next build — this starter is ready for the feature to be wired in.`);
-    else setNotice("");
+    setSearch("");
+    setNotice("");
   }
 
   return (
@@ -69,11 +74,11 @@ export default function App() {
         </section>
 
         <section className="sets-section">
-          <div className="section-heading"><div><div className="eyebrow">FIND YOUR FLOW</div><h2>{activeTab === "Discover" ? "Pick your next challenge" : activeTab}</h2><p>Choose a set, test what you know, and earn those points.</p></div><button className="create-btn" onClick={() => setNotice("Set creation is coming next. The database schema already supports user-owned flashcard sets.")}><Plus size={17}/> Create a set</button></div>
+          <div className="section-heading"><div><div className="eyebrow">{activeTab === "My study sets" ? "YOUR COLLECTION" : "FIND YOUR FLOW"}</div><h2>{activeTab === "Discover" ? "Pick your next challenge" : activeTab}</h2><p>{activeTab === "My study sets" ? `${mySets.length} set${mySets.length === 1 ? "" : "s"} created by you.` : "Choose a set, test what you know, and earn those points."}</p></div><button className="create-btn" onClick={() => setNotice("Set creation is coming next. The database schema already supports user-owned flashcard sets.")}><Plus size={17}/> Create a set</button></div>
           {notice && <div className="notice" role="status">{notice}<button onClick={() => setNotice("")} aria-label="Dismiss">×</button></div>}
-          <div className="search-row"><div className="search-box"><Search size={18}/><input aria-label="Search study sets" placeholder="Search topics, subjects, or creators..." value={search} onChange={e => setSearch(e.target.value)}/><kbd>⌘ K</kbd></div><button className="filter-btn" onClick={() => setSearch("")}>Clear search</button></div>
+          <div className="search-row"><div className="search-box"><Search size={18}/><input aria-label={activeTab === "My study sets" ? "Search my study sets" : "Search study sets"} placeholder={activeTab === "My study sets" ? "Search your study sets..." : "Search topics, subjects, or creators..."} value={search} onChange={e => setSearch(e.target.value)}/><kbd>⌘ K</kbd></div>{search && <button className="filter-btn" onClick={() => setSearch("")}>Clear search</button>}</div>
           <div className="set-grid">{visibleSets.map((set, i) => <article className="set-card" key={set.set_id}><div className={`set-art ${set.color || ["peach","pink","yellow","orange"][i % 4]}`}><span className="art-label">{set.tag || "STUDY SET"}</span><div className="art-illustration">{i % 4 === 0 ? "⌘" : i % 4 === 1 ? "✿" : i % 4 === 2 ? "✦" : "∑"}</div><span className="art-spark">✧</span></div><div className="set-info"><div className="set-meta"><span><BookOpen size={14}/> {set.question_count || 0} questions</span><span className="set-difficulty"><Star size={13} fill="currentColor"/> Beginner</span></div><h3>{set.title}</h3><p>{set.description || "A study set ready for you to explore."}</p><div className="set-footer"><div className="creator"><span className="creator-avatar">{(set.owner || "q").charAt(0).toUpperCase()}</span><span>by <b>{set.owner || "quizlot"}</b></span></div><button className="start-btn" onClick={() => setNotice(`Quiz mode for “${set.title}” is the next feature to implement.`)} aria-label={`Start ${set.title}`}>Start <ChevronRight size={16}/></button></div></div></article>)}</div>
-          {visibleSets.length === 0 && <div className="empty-state"><Search size={24}/><h3>No sets found</h3><p>Try another search term.</p></div>}
+          {visibleSets.length === 0 && <div className="empty-state"><BookOpen size={24}/><h3>{activeTab === "My study sets" && !search ? "Your collection is waiting" : "No sets found"}</h3><p>{activeTab === "My study sets" && !search ? "Create your first study set to start building your collection." : "Try another search term."}</p></div>}
         </section>
         <footer><span>✿ Made for curious minds.</span><span className="api-status"><i className={apiStatus === "connected" ? "online" : ""}></i>{apiStatus === "connected" ? "API connected" : apiStatus === "demo" ? "Demo content · start the API to connect" : "Connecting to API…"}</span></footer>
       </main>
