@@ -5,3 +5,9 @@ export async function getStudySets() {
   if (!response.ok) throw new Error("Could not load study sets");
   return response.json();
 }
+
+export async function getFriends(username) {
+  const response = await fetch(`${API_BASE}/api/friends?username=${encodeURIComponent(username)}`);
+  if (!response.ok) throw new Error("Could not load friends");
+  return response.json();
+}

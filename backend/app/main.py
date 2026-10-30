@@ -19,6 +19,15 @@ DEMO_SETS = [
     {"set_id": 2, "title": "Biology: The Cell", "description": "Organelles and cell processes", "question_count": 18, "owner": "studybuddy"},
     {"set_id": 3, "title": "World Geography", "description": "Countries, capitals, and landmarks", "question_count": 15, "owner": "mapmaven"},
 ]
+DEMO_FRIENDS = [
+    {"username": "mayamakes", "email": "maya@example.com", "points": 420},
+    {"username": "jb_reads", "email": "jordan@example.com", "points": 285},
+    {"username": "samstudies", "email": "sam@example.com", "points": 190},
+]
+DEMO_REQUESTS = [
+    {"username": "alexlearns", "email": "alex@example.com", "points": 155},
+    {"username": "priyaprep", "email": "priya@example.com", "points": 230},
+]
 
 
 @app.get("/api/health")
@@ -51,3 +60,46 @@ def list_sets():
     except Exception as exc:
         # Avoid exposing connection details or credentials in API responses.
         raise HTTPException(status_code=503, detail="Could not load study sets.") from exc
+
+
+@app.get("/api/friends")
+def list_friends(username: str = "quizlot"):
+    if not database_configured():
+        return {"friends": DEMO_FRIENDS, "requests": DEMO_REQUESTS, "source": "demo"}
+    try:
+        with get_connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute("SELECT user_id FROM users WHERE username = %s", (username,))
+            user = cursor.fetchone()
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found.")
+
+            user_id = user["user_id"]
+            cursor.execute(
+                """
+                SELECT u.username, u.email, u.points
+                FROM users u
+                JOIN friends f ON (f.user_id = %s AND f.friend_id = u.user_id)
+                              OR (f.friend_id = %s AND f.user_id = u.user_id)
+                ORDER BY u.username
+                """,
+                (user_id, user_id),
+            )
+            friends = cursor.fetchall()
+            cursor.execute(
+                """
+                SELECT u.username, u.email, u.points
+                FROM friendRequests fr
+                JOIN users u ON u.user_id = fr.sender_id
+                WHERE fr.receiver_id = %s AND fr.status = 'pending'
+                ORDER BY u.username
+                """,
+                (user_id,),
+            )
+            requests = cursor.fetchall()
+            cursor.close()
+        return {"friends": friends, "requests": requests, "source": "database"}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="Could not load friends.") from exc
