@@ -1,6 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
-import { BookOpen, Flame, Search, Plus, Trophy, Users, Sparkles, ChevronRight, MessageCircle, UserPlus, Check, X, Star, Medal, Crown } from "lucide-react";
+import { useEffect, useState } from "react";
+import { BookOpen, Flame, Search, Trophy, Users, Sparkles } from "lucide-react";
 import { getFriends, getLeaderboard, getStudySets } from "./api.js";
+import FriendsPage from "./pages/FriendsPage.jsx";
+import LeaderboardPage from "./pages/LeaderboardPage.jsx";
+import StudySetsPage from "./pages/StudySetsPage.jsx";
 
 const starterSets = [
   {
@@ -68,247 +71,6 @@ const navigationItems = [
 const setTags = ["Computer Science", "Biology", "Geography", "Math"];
 const setColors = ["peach", "pink", "yellow", "orange"];
 
-function Notice({ message, onDismiss }) {
-  if (!message) return null;
-
-  return (
-    <div className="notice" role="status">
-      {message}
-      <button onClick={onDismiss} aria-label="Dismiss">×</button>
-    </div>
-  );
-}
-
-function FriendAvatar({ username, color }) {
-  return (
-    <div className={`friend-avatar ${color}`}>
-      {username.slice(0, 2).toUpperCase()}
-    </div>
-  );
-}
-
-function FriendCard({ friend, onMessage }) {
-  return (
-    <article className="friend-card">
-      <div className="friend-card-top">
-        <FriendAvatar username={friend.username} color={friend.color} />
-        <span className="points-badge">{friend.points} pts</span>
-      </div>
-      <div className="friend-details">
-        <strong>@{friend.username}</strong>
-        <span>{friend.email}</span>
-        <p>{friend.points} points earned</p>
-      </div>
-      <div className="friend-card-footer">
-        <span>Quizlot friend</span>
-        <button
-          className="message-btn"
-          onClick={() => onMessage(friend.username)}
-          aria-label={`Message ${friend.username}`}
-        >
-          <MessageCircle size={16} /> Message
-        </button>
-      </div>
-    </article>
-  );
-}
-
-function FriendRequest({ request, onAccept, onDecline }) {
-  return (
-    <article className="request-card">
-      <FriendAvatar username={request.username} color={request.color} />
-      <div className="friend-details">
-        <strong>@{request.username}</strong>
-        <span>{request.email} · {request.points} pts</span>
-      </div>
-      <div className="request-actions">
-        <button
-          className="accept-btn"
-          onClick={() => onAccept(request.username)}
-          aria-label={`Accept ${request.username}'s request`}
-        >
-          <Check size={16} />
-        </button>
-        <button
-          className="decline-btn"
-          onClick={() => onDecline(request.username)}
-          aria-label={`Decline ${request.username}'s request`}
-        >
-          <X size={16} />
-        </button>
-      </div>
-    </article>
-  );
-}
-
-function LeaderboardView({ entries, friends, notice, setNotice }) {
-  const [scope, setScope] = useState("Everyone");
-  const friendUsernames = friends.map((friend) => friend.username);
-  const visibleEntries = scope === "Friends"
-    ? entries.filter((entry) => entry.username === currentUser || friendUsernames.includes(entry.username))
-    : entries;
-  const podium = visibleEntries.slice(0, 3);
-  const remaining = visibleEntries.slice(3);
-
-  return (
-    <section className="sets-section leaderboard-section">
-      <div className="section-heading">
-        <div>
-          <div className="eyebrow"><Trophy size={14} /> THE COMMUNITY SCOREBOARD</div>
-          <h2>Leaderboard</h2>
-          <p>See who is keeping their curiosity in motion.</p>
-        </div>
-        <button className="create-btn" onClick={() => setNotice("Keep studying to climb the leaderboard!")}>
-          <Medal size={17} /> Earn points
-        </button>
-      </div>
-
-      {notice && <Notice message={notice} onDismiss={() => setNotice("")} />}
-
-      <div className="leaderboard-tabs" role="tablist" aria-label="Leaderboard scope">
-        {["Everyone", "Friends"].map((filter) => (
-          <button key={filter} className={scope === filter ? "selected" : ""} onClick={() => setScope(filter)} role="tab" aria-selected={scope === filter}>
-            {filter === "Everyone" ? <Users size={14} /> : <Medal size={14} />}{filter}
-          </button>
-        ))}
-      </div>
-
-      <div className="podium">
-        {podium.map((entry, index) => (
-          <article className={`podium-card place-${index + 1}`} key={entry.username}>
-            <FriendAvatar username={entry.username} color={entry.color || friendColors[index % friendColors.length]} />
-            <div className="podium-platform">
-              <div className="podium-rank">{index === 0 ? <Crown size={17} /> : index + 1}</div>
-              <strong>@{entry.username}</strong>
-              <span>{entry.points} pts</span>
-            </div>
-          </article>
-        ))}
-      </div>
-
-      <div className="leaderboard-list" role="table" aria-label={`${scope} leaderboard rankings`}>
-        <div className="leaderboard-list-header" role="row"><span>Rank</span><span>Learner</span><span>Points</span></div>
-        {remaining.map((entry, index) => (
-          <div className={`leaderboard-row ${entry.username === currentUser ? "current-user" : ""}`} role="row" key={entry.username}>
-            <span className="rank-number">{index + 4}</span>
-            <span className="leader-name"><FriendAvatar username={entry.username} color={entry.color || friendColors[index % friendColors.length]} /> @{entry.username}{entry.username === currentUser && <em>You</em>}</span>
-            <strong>{entry.points} pts</strong>
-          </div>
-        ))}
-      </div>
-      {visibleEntries.length === 0 && <div className="empty-state"><Users size={24} /><h3>No friends on the board yet</h3><p>Add friends and start learning together.</p></div>}
-    </section>
-  );
-}
-
-function FriendsView({
-  friends,
-  requests,
-  search,
-  setSearch,
-  friendFilter,
-  setFriendFilter,
-  notice,
-  setNotice,
-}) {
-  const visibleFriends = friends.filter((friend) =>
-    `${friend.username} ${friend.email}`.toLowerCase().includes(search.toLowerCase())
-  );
-
-  return (
-    <section className="sets-section friends-section">
-      <div className="section-heading">
-        <div>
-          <div className="eyebrow">YOUR CIRCLE</div>
-          <h2>Friends</h2>
-          <p>Keep each other curious, motivated, and moving forward.</p>
-        </div>
-        <button
-          className="create-btn"
-          onClick={() => setNotice("Friend search will connect to your account when user profiles are added.")}
-        >
-          <UserPlus size={17} /> Add friends
-        </button>
-      </div>
-
-      <Notice message={notice} onDismiss={() => setNotice("")} />
-
-      <div className="friend-stats">
-        <div><strong>{friends.length}</strong><span>Friends</span></div>
-        <div><strong>{requests.length}</strong><span>Requests</span></div>
-        <div><strong>12</strong><span>Shared sets</span></div>
-      </div>
-
-      <div className="search-row">
-        <div className="search-box">
-          <Search size={18} />
-          <input
-            aria-label="Search friends"
-            placeholder="Search friends..."
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-          {search && (
-            <button
-              className="search-clear"
-              onClick={() => setSearch("")}
-              aria-label="Clear friend search"
-            >
-              ×
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="friend-tabs" role="tablist" aria-label="Friend views">
-        {["All friends", "Requests"].map((filter) => (
-          <button
-            key={filter}
-            className={friendFilter === filter ? "selected" : ""}
-            onClick={() => setFriendFilter(filter)}
-            role="tab"
-            aria-selected={friendFilter === filter}
-          >
-            {filter}
-            <span>{filter === "Requests" ? requests.length : friends.length}</span>
-          </button>
-        ))}
-      </div>
-
-      {friendFilter === "Requests" ? (
-        <div className="request-list">
-          {requests.map((request) => (
-            <FriendRequest
-              key={request.username}
-              request={request}
-              onAccept={(username) => setNotice(`@${username} is now in your friends list.`)}
-              onDecline={(username) => setNotice(`Request from @${username} dismissed.`)}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="friend-grid">
-          {visibleFriends.map((friend) => (
-            <FriendCard
-              key={friend.username}
-              friend={friend}
-              onMessage={(username) => setNotice(`Messaging @${username} will be available in the next build.`)}
-            />
-          ))}
-        </div>
-      )}
-
-      {friendFilter === "All friends" && visibleFriends.length === 0 && (
-        <div className="empty-state">
-          <Users size={24} />
-          <h3>No friends found</h3>
-          <p>Try a different name or username.</p>
-        </div>
-      )}
-    </section>
-  );
-}
-
 export default function App() {
   const [sets, setSets] = useState(starterSets);
   const [search, setSearch] = useState("");
@@ -359,14 +121,6 @@ export default function App() {
       })
       .catch(() => setLeaderboard(starterLeaderboard));
   }, []);
-
-  const mySets = useMemo(() => sets.filter((set) => set.owner?.toLowerCase() === currentUser), [sets]);
-  const visibleSets = useMemo(() => {
-    const availableSets = activeTab === "My study sets" ? mySets : sets;
-    return availableSets.filter((set) =>
-      `${set.title} ${set.description || ""} ${set.owner || ""} ${set.tag || ""}`.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [activeTab, mySets, search, sets]);
 
   function selectTab(tab) {
     setActiveTab(tab);
@@ -472,7 +226,7 @@ export default function App() {
         </section>
 
         {activeTab === "Friends" ? (
-          <FriendsView
+          <FriendsPage
             friends={friends}
             requests={requests}
             search={search}
@@ -483,76 +237,17 @@ export default function App() {
             setNotice={setNotice}
           />
         ) : activeTab === "Leaderboard" ? (
-          <LeaderboardView entries={leaderboard} friends={friends} notice={notice} setNotice={setNotice} />
-        ) : <section className="sets-section">
-          <div className="section-heading">
-            <div>
-              <div className="eyebrow">
-                {activeTab === "My study sets" ? "YOUR COLLECTION" : "FIND YOUR FLOW"}
-              </div>
-              <h2>
-                {activeTab === "Discover" ? "Pick your next challenge" : activeTab}
-              </h2>
-              <p>
-                {activeTab === "My study sets" ? `${mySets.length} set${mySets.length === 1 ? "" : "s"} created by you.` : "Choose a set, test what you know, and earn those points."}
-              </p>
-            </div>
-            <button className="create-btn" onClick={() => setNotice("Set creation is coming next. The database schema already supports user-owned flashcard sets.")}>
-              <Plus size={17}/> Create a set
-            </button>
-          </div>
-          {notice && <div className="notice" role="status">{notice}<button onClick={() => setNotice("")} aria-label="Dismiss">×</button></div>}
-          <div className="search-row">
-            <div className="search-box">
-              <Search size={18}/>
-              <input aria-label={activeTab === "My study sets" ? "Search my study sets" : "Search study sets"} placeholder={activeTab === "My study sets" ? "Search your study sets..." : "Search topics, subjects, or creators..."} value={search} onChange={e => setSearch(e.target.value)}/>
-            </div>
-            {search && <button className="filter-btn" onClick={() => setSearch("")}>Clear search</button>}
-          </div>
-          <div className="set-grid">{visibleSets.map((set, i) => 
-            <article className="set-card" key={set.set_id}>
-              <div className={`set-art ${set.color || ["peach","pink","yellow","orange"][i % 4]}`}>
-                <span className="art-label">
-                  {set.tag || "STUDY SET"}
-                </span>
-                <div className="art-illustration">
-                  {i % 4 === 0 ? "⌘" : i % 4 === 1 ? "✿" : i % 4 === 2 ? "✦" : "∑"}
-                </div>
-                <span className="art-spark">✧</span>
-              </div>
-              <div className="set-info">
-                <div className="set-meta">
-                  <span>
-                    <BookOpen size={14}/> {set.question_count || 0} questions
-                  </span>
-                  <span className="set-difficulty">
-                    <Star size={13} fill="currentColor"/> Beginner
-                  </span>
-                </div>
-                <h3>
-                  {set.title}
-                </h3>
-                <p>
-                  {set.description || "A study set ready for you to explore."}
-                </p>
-                <div className="set-footer">
-                  <div className="creator">
-                    <span className="creator-avatar">
-                      {(set.owner || "q").charAt(0).toUpperCase()}
-                    </span>
-                    <span>
-                      by <b>{set.owner || "quizlot"}</b>
-                    </span>
-                  </div>
-                  <button className="start-btn" onClick={() => setNotice(`Quiz mode for “${set.title}” is the next feature to implement.`)} aria-label={`Start ${set.title}`}>
-                    Start <ChevronRight size={16}/>
-                  </button>
-                </div>
-              </div>
-            </article>)}
-          </div>
-          {visibleSets.length === 0 && <div className="empty-state"><BookOpen size={24}/><h3>{activeTab === "My study sets" && !search ? "Your collection is waiting" : "No sets found"}</h3><p>{activeTab === "My study sets" && !search ? "Create your first study set to start building your collection." : "Try another search term."}</p></div>}
-        </section>}
+          <LeaderboardPage entries={leaderboard} friends={friends} notice={notice} setNotice={setNotice} />
+        ) : (
+          <StudySetsPage
+            activeTab={activeTab}
+            sets={sets}
+            search={search}
+            setSearch={setSearch}
+            notice={notice}
+            setNotice={setNotice}
+          />
+        )}
         <footer><span>✿ Made for curious minds.</span><span className="api-status"><i className={apiStatus === "connected" ? "online" : ""}></i>{apiStatus === "connected" ? "API connected" : apiStatus === "demo" ? "Demo content · start the API to connect" : "Connecting to API…"}</span></footer>
       </main>
     </div>
