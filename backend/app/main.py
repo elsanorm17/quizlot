@@ -28,6 +28,14 @@ DEMO_REQUESTS = [
     {"username": "alexlearns", "email": "alex@example.com", "points": 155},
     {"username": "priyaprep", "email": "priya@example.com", "points": 230},
 ]
+DEMO_LEADERBOARD = [
+    {"username": "joe_cool", "points": 420},
+    {"username": "charlieBrown", "points": 285},
+    {"username": "woodstock", "points": 190},
+    {"username": "quizlot", "points": 120},
+    {"username": "shaq", "points": 95},
+    {"username": "aaron", "points": 70},
+]
 
 
 @app.get("/api/health")
@@ -103,3 +111,20 @@ def list_friends(username: str = "quizlot"):
         raise
     except Exception as exc:
         raise HTTPException(status_code=503, detail="Could not load friends.") from exc
+
+
+@app.get("/api/leaderboard")
+def list_leaderboard(username: str = "quizlot"):
+    if not database_configured():
+        return {"entries": DEMO_LEADERBOARD, "source": "demo"}
+    try:
+        with get_connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(
+                "SELECT username, points FROM users ORDER BY points DESC, username ASC LIMIT 50"
+            )
+            entries = cursor.fetchall()
+            cursor.close()
+        return {"entries": entries, "source": "database"}
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="Could not load leaderboard.") from exc

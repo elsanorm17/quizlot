@@ -11,3 +11,9 @@ export async function getFriends(username) {
   if (!response.ok) throw new Error("Could not load friends");
   return response.json();
 }
+
+export async function getLeaderboard(username) {
+  const response = await fetch(`${API_BASE}/api/leaderboard?username=${encodeURIComponent(username)}`);
+  if (!response.ok) throw new Error("Could not load leaderboard");
+  return response.json();
+}
