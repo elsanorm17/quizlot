@@ -19,15 +19,15 @@ export function FriendAvatar({ username, color }) {
   );
 }
 
-export function FriendCard({ friend, onMessage }) {
+export function FriendCard({ friend, onMessage, onOpenProfile }) {
   return (
-    <article className="friend-card">
+    <article className="friend-card" onClick={() => onOpenProfile(friend.username)} onKeyDown={(event) => event.key === "Enter" && onOpenProfile(friend.username)} tabIndex="0">
       <div className="friend-card-top">
         <FriendAvatar username={friend.username} color={friend.color} />
         <span className="points-badge">{friend.points} pts</span>
       </div>
       <div className="friend-details">
-        <strong>@{friend.username}</strong>
+        <button className="profile-link" onClick={() => onOpenProfile(friend.username)}>@{friend.username}</button>
         <span>{friend.email}</span>
         <p>{friend.points} points earned</p>
       </div>
@@ -35,7 +35,7 @@ export function FriendCard({ friend, onMessage }) {
         <span>Quizlot friend</span>
         <button
           className="message-btn"
-          onClick={() => onMessage(friend.username)}
+          onClick={(event) => { event.stopPropagation(); onMessage(friend.username); }}
           aria-label={`Message ${friend.username}`}
         >
           <MessageCircle size={16} /> Message
@@ -45,25 +45,25 @@ export function FriendCard({ friend, onMessage }) {
   );
 }
 
-export function FriendRequest({ request, onAccept, onDecline }) {
+export function FriendRequest({ request, onAccept, onDecline, onOpenProfile }) {
   return (
-    <article className="request-card">
+    <article className="request-card" onClick={() => onOpenProfile(request.username)}>
       <FriendAvatar username={request.username} color={request.color} />
       <div className="friend-details">
-        <strong>@{request.username}</strong>
+        <button className="profile-link" onClick={() => onOpenProfile(request.username)}>@{request.username}</button>
         <span>{request.email} · {request.points} pts</span>
       </div>
       <div className="request-actions">
         <button
           className="accept-btn"
-          onClick={() => onAccept(request.username)}
+          onClick={(event) => { event.stopPropagation(); onAccept(request.username); }}
           aria-label={`Accept ${request.username}'s request`}
         >
           <Check size={16} />
         </button>
         <button
           className="decline-btn"
-          onClick={() => onDecline(request.username)}
+          onClick={(event) => { event.stopPropagation(); onDecline(request.username); }}
           aria-label={`Decline ${request.username}'s request`}
         >
           <X size={16} />

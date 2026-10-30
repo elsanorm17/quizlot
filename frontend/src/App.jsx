@@ -3,6 +3,7 @@ import { BookOpen, Flame, Search, Trophy, Users, Sparkles } from "lucide-react";
 import { getFriends, getLeaderboard, getStudySets } from "./api.js";
 import FriendsPage from "./pages/FriendsPage.jsx";
 import LeaderboardPage from "./pages/LeaderboardPage.jsx";
+import ProfilePage from "./pages/ProfilePage.jsx";
 import StudySetsPage from "./pages/StudySetsPage.jsx";
 
 const starterSets = [
@@ -81,6 +82,7 @@ export default function App() {
   const [friends, setFriends] = useState(starterFriends);
   const [requests, setRequests] = useState(starterRequests);
   const [leaderboard, setLeaderboard] = useState(starterLeaderboard);
+  const [profileUsername, setProfileUsername] = useState(null);
 
   useEffect(() => {
     getStudySets()
@@ -124,9 +126,15 @@ export default function App() {
 
   function selectTab(tab) {
     setActiveTab(tab);
+    setProfileUsername(null);
     setSearch("");
     setNotice("");
     setFriendFilter("All friends");
+  }
+
+  function openProfile(username) {
+    setProfileUsername(username);
+    setNotice("");
   }
 
   return (
@@ -172,16 +180,16 @@ export default function App() {
       <main className="main-content">
         <header className="topbar">
           <div className="breadcrumb">
-            Your space <span>/</span> <b>{activeTab}</b>
+            Your space <span>/</span> <b>{profileUsername ? `@${profileUsername}` : activeTab}</b>
           </div>
           <div className="top-actions">
             <div className="points">
               <span>✦</span> 120 pts
             </div>
-            <button className="avatar small" title="Profile">S</button>
+            <button className="avatar small" title="Open your profile" onClick={() => openProfile(currentUser)}>S</button>
           </div>
         </header>
-        <section className="welcome-row">
+        {!profileUsername && <section className="welcome-row">
           <div>
             <div className="eyebrow">
               <Sparkles size={14}/> YOUR NEXT STUDY SESSION
@@ -194,9 +202,9 @@ export default function App() {
             <div className="doodle-card"><BookOpen size={30}/></div>
             <span className="doodle-spark">✦</span>
           </div>
-        </section>
+        </section>}
 
-        <section className="stats-grid">
+        {!profileUsername && <section className="stats-grid">
           <div className="stat-card stat-pink">
             <div className="stat-icon">
               <Flame size={18}/>
@@ -223,9 +231,18 @@ export default function App() {
               <p>Next level: 200 pts</p>
             </div>
           </div>
-        </section>
+        </section>}
 
-        {activeTab === "Friends" ? (
+        {profileUsername ? (
+          <ProfilePage
+            username={profileUsername}
+            friends={friends}
+            leaderboard={leaderboard}
+            sets={sets}
+            onBack={() => setProfileUsername(null)}
+            onOpenProfile={openProfile}
+          />
+        ) : activeTab === "Friends" ? (
           <FriendsPage
             friends={friends}
             requests={requests}
@@ -235,9 +252,10 @@ export default function App() {
             setFriendFilter={setFriendFilter}
             notice={notice}
             setNotice={setNotice}
+            onOpenProfile={openProfile}
           />
         ) : activeTab === "Leaderboard" ? (
-          <LeaderboardPage entries={leaderboard} friends={friends} notice={notice} setNotice={setNotice} />
+          <LeaderboardPage entries={leaderboard} friends={friends} notice={notice} setNotice={setNotice} onOpenProfile={openProfile} />
         ) : (
           <StudySetsPage
             activeTab={activeTab}
@@ -246,6 +264,7 @@ export default function App() {
             setSearch={setSearch}
             notice={notice}
             setNotice={setNotice}
+            onOpenProfile={openProfile}
           />
         )}
         <footer><span>✿ Made for curious minds.</span><span className="api-status"><i className={apiStatus === "connected" ? "online" : ""}></i>{apiStatus === "connected" ? "API connected" : apiStatus === "demo" ? "Demo content · start the API to connect" : "Connecting to API…"}</span></footer>

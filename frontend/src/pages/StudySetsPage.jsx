@@ -5,7 +5,7 @@ import { Notice } from "../components/PagePrimitives.jsx";
 const currentUser = "quizlot";
 const fallbackColors = ["peach", "pink", "yellow", "orange"];
 
-export default function StudySetsPage({ activeTab, sets, search, setSearch, notice, setNotice }) {
+export default function StudySetsPage({ activeTab, sets, search, setSearch, notice, setNotice, onOpenProfile }) {
   const mySets = useMemo(() => sets.filter((set) => set.owner?.toLowerCase() === currentUser), [sets]);
   const visibleSets = useMemo(() => {
     const availableSets = activeTab === "My study sets" ? mySets : sets;
@@ -49,7 +49,7 @@ export default function StudySetsPage({ activeTab, sets, search, setSearch, noti
             <h3>{set.title}</h3>
             <p>{set.description || "A study set ready for you to explore."}</p>
             <div className="set-footer">
-              <div className="creator"><span className="creator-avatar">{(set.owner || "q").charAt(0).toUpperCase()}</span><span>by <b>{set.owner || "quizlot"}</b></span></div>
+              <button className="creator profile-creator" onClick={() => onOpenProfile(set.owner || "quizlot")}><span className="creator-avatar">{(set.owner || "q").charAt(0).toUpperCase()}</span><span>by <b>{set.owner || "quizlot"}</b></span></button>
               <button className="start-btn" onClick={() => setNotice(`Quiz mode for “${set.title}” is the next feature to implement.`)} aria-label={`Start ${set.title}`}>Start <ChevronRight size={16}/></button>
             </div>
           </div>

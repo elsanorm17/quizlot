@@ -5,7 +5,7 @@ import { FriendAvatar, Notice } from "../components/PagePrimitives.jsx";
 const currentUser = "quizlot";
 const friendColors = ["pink", "yellow", "peach", "orange"];
 
-export default function LeaderboardPage({ entries, friends, notice, setNotice }) {
+export default function LeaderboardPage({ entries, friends, notice, setNotice, onOpenProfile }) {
   const [scope, setScope] = useState("Everyone");
   const friendUsernames = friends.map((friend) => friend.username);
   const visibleEntries = scope === "Friends"
@@ -43,7 +43,7 @@ export default function LeaderboardPage({ entries, friends, notice, setNotice })
             <FriendAvatar username={entry.username} color={entry.color || friendColors[index % friendColors.length]} />
             <div className="podium-platform">
               <div className="podium-rank">{index === 0 ? <Crown size={17} /> : index + 1}</div>
-              <strong>@{entry.username}</strong>
+              <button className="profile-link" onClick={() => onOpenProfile(entry.username)}>@{entry.username}</button>
               <span>{entry.points} pts</span>
             </div>
           </article>
@@ -55,7 +55,7 @@ export default function LeaderboardPage({ entries, friends, notice, setNotice })
         {remaining.map((entry, index) => (
           <div className={`leaderboard-row ${entry.username === currentUser ? "current-user" : ""}`} role="row" key={entry.username}>
             <span className="rank-number">{index + 4}</span>
-            <span className="leader-name"><FriendAvatar username={entry.username} color={entry.color || friendColors[index % friendColors.length]} /> @{entry.username}{entry.username === currentUser && <em>You</em>}</span>
+            <span className="leader-name"><FriendAvatar username={entry.username} color={entry.color || friendColors[index % friendColors.length]} /><button className="profile-link" onClick={() => onOpenProfile(entry.username)}>@{entry.username}</button>{entry.username === currentUser && <em>You</em>}</span>
             <strong>{entry.points} pts</strong>
           </div>
         ))}

@@ -10,6 +10,7 @@ export default function FriendsPage({
   setFriendFilter,
   notice,
   setNotice,
+  onOpenProfile,
 }) {
   const visibleFriends = friends.filter((friend) =>
     `${friend.username} ${friend.email}`.toLowerCase().includes(search.toLowerCase())
@@ -79,6 +80,7 @@ export default function FriendsPage({
               request={request}
               onAccept={(username) => setNotice(`@${username} is now in your friends list.`)}
               onDecline={(username) => setNotice(`Request from @${username} dismissed.`)}
+              onOpenProfile={onOpenProfile}
             />
           ))}
         </div>
@@ -89,6 +91,7 @@ export default function FriendsPage({
               key={friend.username}
               friend={friend}
               onMessage={(username) => setNotice(`Messaging @${username} will be available in the next build.`)}
+              onOpenProfile={onOpenProfile}
             />
           ))}
         </div>
