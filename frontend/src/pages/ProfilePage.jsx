@@ -1,4 +1,4 @@
-import { ArrowLeft, BookOpen, Check, Mail, Trophy, UserPlus, Users, X } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, ChevronRight, Star, Trophy, UserPlus, Users, X } from "lucide-react";
 import { FriendAvatar } from "../components/PagePrimitives.jsx";
 
 const currentUser = "quizlot";
@@ -42,17 +42,33 @@ export default function ProfilePage({ username, friends, requests, leaderboard, 
         {relationship === "none" && <><Users size={17} /><span>Not friends yet</span><button className="relationship-btn primary" onClick={() => onRequestFriend(username)}><UserPlus size={15} /> Request to be friends</button></>}
       </div>}
 
-      <div className="profile-columns">
-        <div className="profile-panel">
-          <div className="eyebrow">ABOUT THIS LEARNER</div>
-          <h3>{isCurrentUser ? "A curious mind in progress." : `Say hello to @${username}.`}</h3>
-          <p>{isCurrentUser ? "Small, consistent study sessions add up. Keep exploring topics that make you curious." : "Learning is better with a little company. See what they have been creating and cheering them on."}</p>
-          {friend?.email && <span className="profile-contact"><Mail size={14} /> {friend.email}</span>}
-        </div>
-        <div className="profile-panel">
-          <div className="eyebrow">CREATED STUDY SETS</div>
-          {createdSets.length ? createdSets.map((set) => <button className="profile-set" key={set.set_id}><BookOpen size={16} /><span>{set.title}</span><small>{set.question_count || 0} questions</small></button>) : <p className="profile-empty">No public study sets yet.</p>}
-        </div>
+      <div className="profile-sets">
+        <div className="eyebrow">{createdSets.length ? "CREATED STUDY SETS" : `${username.toUpperCase()} DOES NOT HAVE ANY SETS YET`}</div>
+        {createdSets.length ? (
+          <div className="set-grid">
+            {createdSets.map((set, index) => (
+              <article className="set-card" key={set.set_id}>
+                <div className={`set-art ${set.color || profileColors[index % profileColors.length]}`}>
+                  <span className="art-label">{set.tag || "STUDY SET"}</span>
+                  <div className="art-illustration">{index % 4 === 0 ? "⌘" : index % 4 === 1 ? "✿" : index % 4 === 2 ? "✦" : "∑"}</div>
+                  <span className="art-spark">✧</span>
+                </div>
+                <div className="set-info">
+                  <div className="set-meta">
+                    <span><BookOpen size={14} /> {set.question_count || 0} questions</span>
+                    <span className="set-difficulty"><Star size={13} fill="currentColor" /> Beginner</span>
+                  </div>
+                  <h3>{set.title}</h3>
+                  <p>{set.description || "A study set ready for you to explore."}</p>
+                  <div className="set-footer">
+                    <button className="creator profile-creator" onClick={() => onOpenProfile(set.owner || username)}><span className="creator-avatar">{(set.owner || username).charAt(0).toUpperCase()}</span><span>by <b>{set.owner || username}</b></span></button>
+                    <button className="start-btn" onClick={() => onOpenProfile(set.owner || username)}>View <ChevronRight size={16} /></button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {standing >= 0 && <button className="profile-rank" onClick={() => onOpenProfile(username)}><Trophy size={16} /> Ranked <strong>#{standing + 1}</strong> on the community leaderboard <span>{points} pts</span></button>}
