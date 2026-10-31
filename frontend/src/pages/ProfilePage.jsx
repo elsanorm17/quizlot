@@ -18,6 +18,7 @@ export default function ProfilePage({ username, friends, requests, leaderboard, 
   return (
     <section className="profile-page">
       <button className="back-btn" onClick={onBack}><ArrowLeft size={16} /> Back to {isCurrentUser ? "your space" : "friends"}</button>
+      {standing >= 0 && <button className="profile-rank" onClick={() => onOpenProfile(username)}><Trophy size={16} /> Ranked <strong>#{standing + 1}</strong> on the community leaderboard <span>{points} pts</span></button>}
       <div className={`profile-hero ${color}`}>
         <div className="profile-avatar-wrap"><FriendAvatar username={username} color={color} /></div>
         <div className="profile-identity">
@@ -71,7 +72,6 @@ export default function ProfilePage({ username, friends, requests, leaderboard, 
         ) : null}
       </div>
 
-      {standing >= 0 && <button className="profile-rank" onClick={() => onOpenProfile(username)}><Trophy size={16} /> Ranked <strong>#{standing + 1}</strong> on the community leaderboard <span>{points} pts</span></button>}
     </section>
   );
 }

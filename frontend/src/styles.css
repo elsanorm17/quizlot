@@ -1093,6 +1093,7 @@ button {
 .profile-stats svg { grid-row: span 2; color: #d987a2; }
 .profile-stats strong { font-family: "Nunito", sans-serif; font-size: 17px; }
 .profile-stats span { color: #a1969b; font-size: 10px; }
+.profile-sets { padding-top: 8px; }
 .profile-sets .set-grid { margin-top: 16px; }
 .relationship-stat.relationship-friend svg { color: #65a875; }
 .relationship-stat.relationship-incoming svg { color: #d39a3a; }
@@ -1191,7 +1192,7 @@ button {
   align-items: center;
   gap: 7px;
   width: 100%;
-  margin-top: 15px;
+  margin: 0 0 17px;
   padding: 13px 16px;
   border: 1px solid #f7e7bf;
   border-radius: 11px;
