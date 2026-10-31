@@ -1093,6 +1093,43 @@ button {
 .profile-stats svg { grid-row: span 2; color: #d987a2; }
 .profile-stats strong { font-family: "Nunito", sans-serif; font-size: 17px; }
 .profile-stats span { color: #a1969b; font-size: 10px; }
+.relationship-stat.relationship-friend svg { color: #65a875; }
+.relationship-stat.relationship-incoming svg { color: #d39a3a; }
+.relationship-stat.relationship-outgoing svg { color: #c9859e; }
+.relationship-stat.relationship-none svg { color: #a1969b; }
+.profile-relationship {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 16px;
+  padding: 11px 14px;
+  border: 1px solid #f0e2df;
+  border-radius: 12px;
+  background: #fff;
+  color: #665960;
+  font-size: 11px;
+}
+.profile-relationship > span { flex: 1; font-weight: 700; }
+.profile-relationship.relationship-friend { border-color: #dceede; background: #f7fcf7; color: #4f865d; }
+.profile-relationship.relationship-incoming { border-color: #f7e7bf; background: #fffaf0; color: #9c762d; }
+.profile-relationship.relationship-outgoing { border-color: #f2dce5; background: #fff8fa; color: #a96782; }
+.profile-relationship.relationship-none { background: #fffaf8; }
+.relationship-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 800;
+}
+.relationship-btn.primary { background: #ed9bb7; color: #fff; }
+.relationship-btn.primary:hover { background: #e88dad; }
+.relationship-btn.muted { background: #f3e7ea; color: #a96782; }
+.relationship-btn.accept { background: #dceede; color: #4f865d; }
+.relationship-btn.reject { background: #f9e3e3; color: #ae7777; }
 .profile-columns {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -1312,6 +1349,8 @@ footer {
   .profile-identity h2 { font-size: 22px; }
   .profile-spark { right: 15px; font-size: 45px; }
   .profile-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .profile-relationship { flex-wrap: wrap; }
+  .profile-relationship > span { min-width: calc(100% - 28px); }
   .profile-columns { grid-template-columns: 1fr; }
   .podium {
     gap: 7px;

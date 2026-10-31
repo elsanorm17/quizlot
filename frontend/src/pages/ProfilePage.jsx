@@ -1,16 +1,19 @@
-import { ArrowLeft, BookOpen, Mail, Trophy, Users } from "lucide-react";
+import { ArrowLeft, BookOpen, Check, Mail, Trophy, UserPlus, Users, X } from "lucide-react";
 import { FriendAvatar } from "../components/PagePrimitives.jsx";
 
 const currentUser = "quizlot";
 const profileColors = ["pink", "yellow", "peach", "orange"];
 
-export default function ProfilePage({ username, friends, leaderboard, sets, onBack, onOpenProfile }) {
+export default function ProfilePage({ username, friends, requests, leaderboard, sets, outgoingRequests, onBack, onOpenProfile, onRequestFriend, onRemoveFriendRequest, onAcceptFriendRequest, onDeclineFriendRequest, onRemoveFriend }) {
   const friend = friends.find((item) => item.username === username);
+  const incomingRequest = requests.find((item) => item.username === username);
+  const outgoingRequest = outgoingRequests.find((item) => item.username === username);
   const standing = leaderboard.findIndex((entry) => entry.username === username);
   const points = friend?.points ?? leaderboard.find((entry) => entry.username === username)?.points ?? 0;
   const color = friend?.color ?? leaderboard.find((entry) => entry.username === username)?.color ?? profileColors[username.length % profileColors.length];
   const createdSets = sets.filter((set) => set.owner?.toLowerCase() === username.toLowerCase());
   const isCurrentUser = username === currentUser;
+  const relationship = isCurrentUser ? "self" : friend ? "friend" : incomingRequest ? "incoming" : outgoingRequest ? "outgoing" : "none";
 
   return (
     <section className="profile-page">
@@ -25,11 +28,19 @@ export default function ProfilePage({ username, friends, leaderboard, sets, onBa
         <div className="profile-spark">✦</div>
       </div>
 
-      <div className="profile-stats">
+      <div className={`profile-stats ${isCurrentUser ? "" : "profile-stats-four"}`}>
         <div><Trophy size={18} /><strong>{points}</strong><span>points</span></div>
         <div><BookOpen size={18} /><strong>{createdSets.length}</strong><span>study sets</span></div>
-        <div><Users size={18} /><strong>{friend ? "Friend" : standing >= 0 ? `#${standing + 1}` : "Learner"}</strong><span>{friend ? "in your circle" : "leaderboard"}</span></div>
+        <div><Trophy size={18} /><strong>{standing >= 0 ? `#${standing + 1}` : "—"}</strong><span>leaderboard rank</span></div>
+        {!isCurrentUser && <div className={`relationship-stat relationship-${relationship}`}><Users size={18} /><strong>{relationship === "friend" ? "Friends" : relationship === "incoming" ? "Incoming" : relationship === "outgoing" ? "Pending" : "Not friends"}</strong><span>connection</span></div>}
       </div>
+
+      {!isCurrentUser && <div className={`profile-relationship relationship-${relationship}`}>
+        {relationship === "friend" && <><Check size={17} /><span>You are friends</span><button className="relationship-btn muted" onClick={() => onRemoveFriend(username)}><X size={15} /> Remove friend</button></>}
+        {relationship === "outgoing" && <><Check size={17} /><span>Friend request sent</span><button className="relationship-btn muted" onClick={() => onRemoveFriendRequest(username)}><X size={15} /> Remove request</button></>}
+        {relationship === "incoming" && <><UserPlus size={17} /><span>They requested to be friends</span><button className="relationship-btn accept" onClick={() => onAcceptFriendRequest(username)}><Check size={15} /> Accept</button><button className="relationship-btn reject" onClick={() => onDeclineFriendRequest(username)}><X size={15} /> Reject</button></>}
+        {relationship === "none" && <><Users size={17} /><span>Not friends yet</span><button className="relationship-btn primary" onClick={() => onRequestFriend(username)}><UserPlus size={15} /> Request to be friends</button></>}
+      </div>}
 
       <div className="profile-columns">
         <div className="profile-panel">

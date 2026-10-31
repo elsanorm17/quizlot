@@ -81,6 +81,7 @@ export default function App() {
   const [friendFilter, setFriendFilter] = useState("All friends");
   const [friends, setFriends] = useState(starterFriends);
   const [requests, setRequests] = useState(starterRequests);
+  const [outgoingRequests, setOutgoingRequests] = useState([]);
   const [leaderboard, setLeaderboard] = useState(starterLeaderboard);
   const [profileUsername, setProfileUsername] = useState(null);
 
@@ -135,6 +136,36 @@ export default function App() {
   function openProfile(username) {
     setProfileUsername(username);
     setNotice("");
+  }
+
+  function getProfileUser(username) {
+    return friends.find((user) => user.username === username)
+      || requests.find((user) => user.username === username)
+      || leaderboard.find((user) => user.username === username)
+      || { username, points: 0 };
+  }
+
+  function requestFriend(username) {
+    const user = getProfileUser(username);
+    setOutgoingRequests((current) => [...current.filter((item) => item.username !== username), user]);
+  }
+
+  function removeFriendRequest(username) {
+    setOutgoingRequests((current) => current.filter((item) => item.username !== username));
+  }
+
+  function acceptFriendRequest(username) {
+    const request = requests.find((item) => item.username === username);
+    if (request) setFriends((current) => [...current, request]);
+    setRequests((current) => current.filter((item) => item.username !== username));
+  }
+
+  function declineFriendRequest(username) {
+    setRequests((current) => current.filter((item) => item.username !== username));
+  }
+
+  function removeFriend(username) {
+    setFriends((current) => current.filter((item) => item.username !== username));
   }
 
   return (
@@ -220,8 +251,15 @@ export default function App() {
             friends={friends}
             leaderboard={leaderboard}
             sets={sets}
+            requests={requests}
+            outgoingRequests={outgoingRequests}
             onBack={() => setProfileUsername(null)}
             onOpenProfile={openProfile}
+            onRequestFriend={requestFriend}
+            onRemoveFriendRequest={removeFriendRequest}
+            onAcceptFriendRequest={acceptFriendRequest}
+            onDeclineFriendRequest={declineFriendRequest}
+            onRemoveFriend={removeFriend}
           />
         ) : activeTab === "Friends" ? (
           <FriendsPage
