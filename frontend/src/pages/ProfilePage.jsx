@@ -1,4 +1,4 @@
-import { ArrowLeft, BookOpen, Flame, Mail, Trophy, Users } from "lucide-react";
+import { ArrowLeft, BookOpen, Mail, Trophy, Users } from "lucide-react";
 import { FriendAvatar } from "../components/PagePrimitives.jsx";
 
 const currentUser = "quizlot";
@@ -26,7 +26,6 @@ export default function ProfilePage({ username, friends, leaderboard, sets, onBa
       </div>
 
       <div className="profile-stats">
-        <div><Flame size={18} /><strong>{isCurrentUser ? 3 : Math.max(1, Math.floor(points / 100))}</strong><span>day streak</span></div>
         <div><Trophy size={18} /><strong>{points}</strong><span>points</span></div>
         <div><BookOpen size={18} /><strong>{createdSets.length}</strong><span>study sets</span></div>
         <div><Users size={18} /><strong>{friend ? "Friend" : standing >= 0 ? `#${standing + 1}` : "Learner"}</strong><span>{friend ? "in your circle" : "leaderboard"}</span></div>

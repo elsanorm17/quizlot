@@ -90,7 +90,6 @@ export default function FriendsPage({
             <FriendCard
               key={friend.username}
               friend={friend}
-              onMessage={(username) => setNotice(`Messaging @${username} will be available in the next build.`)}
               onOpenProfile={onOpenProfile}
             />
           ))}

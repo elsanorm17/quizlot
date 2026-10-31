@@ -1,4 +1,4 @@
-import { Check, MessageCircle, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 
 export function Notice({ message, onDismiss }) {
   if (!message) return null;
@@ -19,7 +19,7 @@ export function FriendAvatar({ username, color }) {
   );
 }
 
-export function FriendCard({ friend, onMessage, onOpenProfile }) {
+export function FriendCard({ friend, onOpenProfile }) {
   return (
     <article className="friend-card" onClick={() => onOpenProfile(friend.username)} onKeyDown={(event) => event.key === "Enter" && onOpenProfile(friend.username)} tabIndex="0">
       <div className="friend-card-top">
@@ -33,13 +33,6 @@ export function FriendCard({ friend, onMessage, onOpenProfile }) {
       </div>
       <div className="friend-card-footer">
         <span>Quizlot friend</span>
-        <button
-          className="message-btn"
-          onClick={(event) => { event.stopPropagation(); onMessage(friend.username); }}
-          aria-label={`Message ${friend.username}`}
-        >
-          <MessageCircle size={16} /> Message
-        </button>
       </div>
     </article>
   );

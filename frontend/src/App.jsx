@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BookOpen, Flame, Search, Trophy, Users, Sparkles } from "lucide-react";
+import { BookOpen, Search, Trophy, Users, Sparkles } from "lucide-react";
 import { getFriends, getLeaderboard, getStudySets } from "./api.js";
 import FriendsPage from "./pages/FriendsPage.jsx";
 import LeaderboardPage from "./pages/LeaderboardPage.jsx";
@@ -157,15 +157,6 @@ export default function App() {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <div className="streak-card">
-            <div className="streak-icon">
-              <Flame size={19} fill="currentColor"/>
-            </div>
-            <div>
-              <strong>Keep it going!</strong>
-              <p>Little by little adds up.</p>
-            </div>
-          </div>
           <div className="profile">
             <div className="avatar">S</div>
             <div className="profile-text">
@@ -205,16 +196,6 @@ export default function App() {
         </section>}
 
         {!profileUsername && <section className="stats-grid">
-          <div className="stat-card stat-pink">
-            <div className="stat-icon">
-              <Flame size={18}/>
-            </div>
-            <div>
-              <span className="stat-label">Daily streak</span>
-              <div className="stat-number">3 <small>days</small></div>
-              <p>You're on a roll!</p>
-            </div>
-          </div>
           <div className="stat-card stat-yellow">
             <div className="stat-icon"><BookOpen size={18}/></div>
             <div>
