@@ -281,7 +281,7 @@ export default function App() {
             <button className="avatar small" title="Open your profile" onClick={() => openProfile(currentUser)}>S</button>
           </div>
         </header>
-        {!profileUsername && !selectedSet && <section className="welcome-row">
+        {activeTab === "Discover" && !profileUsername && !selectedSet && <section className="welcome-row">
           <div>
             <div className="eyebrow">
               <Sparkles size={14}/> YOUR NEXT STUDY SESSION
@@ -296,7 +296,7 @@ export default function App() {
           </div>
         </section>}
 
-        {!profileUsername && !selectedSet && <section className="stats-grid">
+        {activeTab === "Discover" && !profileUsername && !selectedSet && <section className="stats-grid">
           <div className="stat-card stat-yellow">
             <div className="stat-icon"><BookOpen size={18}/></div>
             <div>
