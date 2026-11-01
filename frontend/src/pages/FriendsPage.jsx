@@ -34,12 +34,6 @@ export default function FriendsPage({
 
       <Notice message={notice} onDismiss={() => setNotice("")} />
 
-      <div className="friend-stats">
-        <div><strong>{friends.length}</strong><span>Friends</span></div>
-        <div><strong>{requests.length}</strong><span>Requests</span></div>
-        <div><strong>12</strong><span>Shared sets</span></div>
-      </div>
-
       <div className="search-row">
         <div className="search-box">
           <Search size={18} />
