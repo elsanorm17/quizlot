@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { BookOpen, Search, Trophy, Users, Sparkles } from "lucide-react";
+import { BookOpen, Search, Swords, Trophy, Users, Sparkles } from "lucide-react";
 import { getFriends, getLeaderboard, getStudySet, getStudySets } from "./api.js";
 import FriendsPage from "./pages/FriendsPage.jsx";
 import LeaderboardPage from "./pages/LeaderboardPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import StudySetsPage from "./pages/StudySetsPage.jsx";
 import SetDetailsPage from "./pages/SetDetailsPage.jsx";
+import ChallengesPage from "./pages/ChallengesPage.jsx";
 
 const starterSets = [
   {
@@ -65,6 +66,52 @@ const starterRequests = [
   { username: "shaq", email: "shaquilleoneal@gmail.com", points: 155, color: "orange" },
   { username: "aaron", email: "aaron.carter@gmail.com", points: 230, color: "pink" },
 ];
+const starterChallenges = [
+  {
+    id: 1,
+    status: "incoming",
+    statusLabel: "Waiting for you",
+    category: "BIOLOGY",
+    title: "Cell showdown",
+    description: "Who knows their organelles best?",
+    questions: 10,
+    time: "2h left",
+    from: { username: "joe_cool", color: "pink" },
+  },
+  {
+    id: 2,
+    status: "active",
+    statusLabel: "In progress",
+    category: "GEOGRAPHY",
+    title: "Around the world",
+    description: "A quick trip through countries and capitals.",
+    questions: 15,
+    time: "You are up",
+    opponent: { username: "mapmaven", color: "yellow" },
+  },
+  {
+    id: 3,
+    status: "active",
+    statusLabel: "In progress",
+    category: "COMPUTER SCIENCE",
+    title: "Code corner",
+    description: "Fundamentals, logic, and a little friendly rivalry.",
+    questions: 12,
+    time: "Yesterday",
+    opponent: { username: "studybuddy", color: "peach" },
+  },
+  {
+    id: 4,
+    status: "completed",
+    statusLabel: "Completed",
+    category: "MATH",
+    title: "Numbers game",
+    description: "A close match from start to finish.",
+    questions: 10,
+    result: "8–7",
+    opponent: { username: "numbersnerd", color: "orange" },
+  },
+];
 const starterLeaderboard = [
   { username: "joe_cool", points: 420, color: "pink" },
   { username: "charlieBrown", points: 285, color: "yellow" },
@@ -78,6 +125,7 @@ const navigationItems = [
   ["Discover", Search],
   ["My study sets", BookOpen],
   ["Friends", Users],
+  ["Challenges", Swords],
   ["Leaderboard", Trophy],
 ];
 const setTags = ["Computer Science", "Biology", "Geography", "Math"];
@@ -92,6 +140,7 @@ export default function App() {
   const [friendFilter, setFriendFilter] = useState("All friends");
   const [friends, setFriends] = useState(starterFriends);
   const [requests, setRequests] = useState(starterRequests);
+  const [challenges] = useState(starterChallenges);
   const [outgoingRequests, setOutgoingRequests] = useState([]);
   const [leaderboard, setLeaderboard] = useState(starterLeaderboard);
   const [profileUsername, setProfileUsername] = useState(null);
@@ -305,6 +354,8 @@ export default function App() {
           />
         ) : activeTab === "Leaderboard" ? (
           <LeaderboardPage entries={leaderboard} friends={friends} notice={notice} setNotice={setNotice} onOpenProfile={openProfile} />
+        ) : activeTab === "Challenges" ? (
+          <ChallengesPage challenges={challenges} notice={notice} setNotice={setNotice} onOpenProfile={openProfile} />
         ) : (
           <StudySetsPage
             activeTab={activeTab}
