@@ -19,6 +19,28 @@ DEMO_SETS = [
     {"set_id": 2, "title": "Biology: The Cell", "description": "Organelles and cell processes", "question_count": 18, "owner": "studybuddy"},
     {"set_id": 3, "title": "World Geography", "description": "Countries, capitals, and landmarks", "question_count": 15, "owner": "mapmaven"},
 ]
+DEMO_CARDS = {
+    1: [
+        {"question_num": 1, "question": "What does CPU stand for?", "answer": "Central Processing Unit", "difficulty": "easy"},
+        {"question_num": 2, "question": "What is a variable?", "answer": "A named location used to store a value", "difficulty": "easy"},
+        {"question_num": 3, "question": "What does HTML describe?", "answer": "The structure and content of a web page", "difficulty": "easy"},
+    ],
+    2: [
+        {"question_num": 1, "question": "What is the powerhouse of the cell?", "answer": "The mitochondrion", "difficulty": "easy"},
+        {"question_num": 2, "question": "What controls what enters and leaves a cell?", "answer": "The cell membrane", "difficulty": "medium"},
+        {"question_num": 3, "question": "Where is DNA stored in a eukaryotic cell?", "answer": "The nucleus", "difficulty": "easy"},
+    ],
+    3: [
+        {"question_num": 1, "question": "What is the capital of Japan?", "answer": "Tokyo", "difficulty": "easy"},
+        {"question_num": 2, "question": "Which is the largest ocean?", "answer": "The Pacific Ocean", "difficulty": "easy"},
+        {"question_num": 3, "question": "What is the longest river in South America?", "answer": "The Amazon River", "difficulty": "medium"},
+    ],
+    4: [
+        {"question_num": 1, "question": "What does the mean describe?", "answer": "The arithmetic average of a set of values", "difficulty": "easy"},
+        {"question_num": 2, "question": "What is the median?", "answer": "The middle value in an ordered data set", "difficulty": "easy"},
+        {"question_num": 3, "question": "What does standard deviation measure?", "answer": "How spread out values are from the mean", "difficulty": "medium"},
+    ],
+}
 DEMO_FRIENDS = [
     {"username": "mayamakes", "email": "maya@example.com", "points": 420},
     {"username": "jb_reads", "email": "jordan@example.com", "points": 285},
@@ -68,6 +90,44 @@ def list_sets():
     except Exception as exc:
         # Avoid exposing connection details or credentials in API responses.
         raise HTTPException(status_code=503, detail="Could not load study sets.") from exc
+
+
+@app.get("/api/sets/{set_id}")
+def get_set(set_id: int):
+    if not database_configured():
+        study_set = next((item for item in DEMO_SETS if item["set_id"] == set_id), None)
+        if not study_set:
+            raise HTTPException(status_code=404, detail="Study set not found.")
+        return {**study_set, "cards": DEMO_CARDS.get(set_id, [])}
+    try:
+        with get_connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(
+                """
+                SELECT fs.set_id, fs.title, fs.description, u.username AS owner,
+                       COUNT(f.question_num) AS question_count
+                FROM flashcardSets fs
+                JOIN users u ON u.user_id = fs.user_id
+                LEFT JOIN flashcards f ON f.set_id = fs.set_id
+                WHERE fs.set_id = %s
+                GROUP BY fs.set_id, fs.title, fs.description, u.username
+                """,
+                (set_id,),
+            )
+            study_set = cursor.fetchone()
+            if not study_set:
+                raise HTTPException(status_code=404, detail="Study set not found.")
+            cursor.execute(
+                "SELECT question_num, question, answer, difficulty FROM flashcards WHERE set_id = %s ORDER BY question_num",
+                (set_id,),
+            )
+            study_set["cards"] = cursor.fetchall()
+            cursor.close()
+        return study_set
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="Could not load study set.") from exc
 
 
 @app.get("/api/friends")

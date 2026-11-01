@@ -4,7 +4,7 @@ import { FriendAvatar } from "../components/PagePrimitives.jsx";
 const currentUser = "quizlot";
 const profileColors = ["pink", "yellow", "peach", "orange"];
 
-export default function ProfilePage({ username, friends, requests, leaderboard, sets, outgoingRequests, onBack, onOpenProfile, onRequestFriend, onRemoveFriendRequest, onAcceptFriendRequest, onDeclineFriendRequest, onRemoveFriend }) {
+export default function ProfilePage({ username, friends, requests, leaderboard, sets, outgoingRequests, onBack, onOpenProfile, onOpenSet, onRequestFriend, onRemoveFriendRequest, onAcceptFriendRequest, onDeclineFriendRequest, onRemoveFriend }) {
   const friend = friends.find((item) => item.username === username);
   const incomingRequest = requests.find((item) => item.username === username);
   const outgoingRequest = outgoingRequests.find((item) => item.username === username);
@@ -48,7 +48,7 @@ export default function ProfilePage({ username, friends, requests, leaderboard, 
         {createdSets.length ? (
           <div className="set-grid">
             {createdSets.map((set, index) => (
-              <article className="set-card" key={set.set_id}>
+              <article className="set-card" key={set.set_id} onClick={() => onOpenSet(set)} onKeyDown={(event) => event.key === "Enter" && onOpenSet(set)} tabIndex="0">
                 <div className={`set-art ${set.color || profileColors[index % profileColors.length]}`}>
                   <span className="art-label">{set.tag || "STUDY SET"}</span>
                   <div className="art-illustration">{index % 4 === 0 ? "⌘" : index % 4 === 1 ? "✿" : index % 4 === 2 ? "✦" : "∑"}</div>
@@ -62,8 +62,8 @@ export default function ProfilePage({ username, friends, requests, leaderboard, 
                   <h3>{set.title}</h3>
                   <p>{set.description || "A study set ready for you to explore."}</p>
                   <div className="set-footer">
-                    <button className="creator profile-creator" onClick={() => onOpenProfile(set.owner || username)}><span className="creator-avatar">{(set.owner || username).charAt(0).toUpperCase()}</span><span>by <b>{set.owner || username}</b></span></button>
-                    <button className="start-btn" onClick={() => onOpenProfile(set.owner || username)}>View <ChevronRight size={16} /></button>
+                    <button className="creator profile-creator" onClick={(event) => { event.stopPropagation(); onOpenProfile(set.owner || username); }}><span className="creator-avatar">{(set.owner || username).charAt(0).toUpperCase()}</span><span>by <b>{set.owner || username}</b></span></button>
+                    <button className="start-btn" onClick={(event) => { event.stopPropagation(); onOpenSet(set); }}>View <ChevronRight size={16} /></button>
                   </div>
                 </div>
               </article>

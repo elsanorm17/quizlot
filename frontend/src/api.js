@@ -6,6 +6,12 @@ export async function getStudySets() {
   return response.json();
 }
 
+export async function getStudySet(setId) {
+  const response = await fetch(`${API_BASE}/api/sets/${setId}`);
+  if (!response.ok) throw new Error("Could not load study set");
+  return response.json();
+}
+
 export async function getFriends(username) {
   const response = await fetch(`${API_BASE}/api/friends?username=${encodeURIComponent(username)}`);
   if (!response.ok) throw new Error("Could not load friends");

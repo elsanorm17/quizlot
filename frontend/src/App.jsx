@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { BookOpen, Search, Trophy, Users, Sparkles } from "lucide-react";
-import { getFriends, getLeaderboard, getStudySets } from "./api.js";
+import { getFriends, getLeaderboard, getStudySet, getStudySets } from "./api.js";
 import FriendsPage from "./pages/FriendsPage.jsx";
 import LeaderboardPage from "./pages/LeaderboardPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import StudySetsPage from "./pages/StudySetsPage.jsx";
+import SetDetailsPage from "./pages/SetDetailsPage.jsx";
 
 const starterSets = [
   {
@@ -33,6 +34,11 @@ const starterSets = [
     owner: "mapmaven",
     tag: "Geography",
     color: "yellow",
+    cards: [
+      { question_num: 1, question: "What is the capital of Japan?", answer: "Tokyo", difficulty: "easy" },
+      { question_num: 2, question: "Which is the largest ocean?", answer: "The Pacific Ocean", difficulty: "easy" },
+      { question_num: 3, question: "What is the longest river in South America?", answer: "The Amazon River", difficulty: "medium" },
+    ],
   },
   {
     set_id: 4,
@@ -42,6 +48,11 @@ const starterSets = [
     owner: "numbersnerd",
     tag: "Math",
     color: "orange",
+    cards: [
+      { question_num: 1, question: "What does the mean describe?", answer: "The arithmetic average of a set of values", difficulty: "easy" },
+      { question_num: 2, question: "What is the median?", answer: "The middle value in an ordered data set", difficulty: "easy" },
+      { question_num: 3, question: "What does standard deviation measure?", answer: "How spread out values are from the mean", difficulty: "medium" },
+    ],
   },
 ];
 const currentUser = "quizlot";
@@ -84,6 +95,7 @@ export default function App() {
   const [outgoingRequests, setOutgoingRequests] = useState([]);
   const [leaderboard, setLeaderboard] = useState(starterLeaderboard);
   const [profileUsername, setProfileUsername] = useState(null);
+  const [selectedSet, setSelectedSet] = useState(null);
 
   useEffect(() => {
     getStudySets()
@@ -128,6 +140,7 @@ export default function App() {
   function selectTab(tab) {
     setActiveTab(tab);
     setProfileUsername(null);
+    setSelectedSet(null);
     setSearch("");
     setNotice("");
     setFriendFilter("All friends");
@@ -135,7 +148,15 @@ export default function App() {
 
   function openProfile(username) {
     setProfileUsername(username);
+    setSelectedSet(null);
     setNotice("");
+  }
+
+  function openSet(set) {
+    setSelectedSet(set);
+    setProfileUsername(null);
+    setNotice("");
+    getStudySet(set.set_id).then((details) => setSelectedSet((current) => current?.set_id === set.set_id ? { ...current, ...details } : current)).catch(() => {});
   }
 
   function getProfileUser(username) {
@@ -202,7 +223,7 @@ export default function App() {
       <main className="main-content">
         <header className="topbar">
           <div className="breadcrumb">
-            Your space <span>/</span> <b>{profileUsername ? `@${profileUsername}` : activeTab}</b>
+            Your space <span>/</span> <b>{profileUsername ? `@${profileUsername}` : selectedSet ? selectedSet.title : activeTab}</b>
           </div>
           <div className="top-actions">
             <div className="points">
@@ -211,7 +232,7 @@ export default function App() {
             <button className="avatar small" title="Open your profile" onClick={() => openProfile(currentUser)}>S</button>
           </div>
         </header>
-        {!profileUsername && <section className="welcome-row">
+        {!profileUsername && !selectedSet && <section className="welcome-row">
           <div>
             <div className="eyebrow">
               <Sparkles size={14}/> YOUR NEXT STUDY SESSION
@@ -226,7 +247,7 @@ export default function App() {
           </div>
         </section>}
 
-        {!profileUsername && <section className="stats-grid">
+        {!profileUsername && !selectedSet && <section className="stats-grid">
           <div className="stat-card stat-yellow">
             <div className="stat-icon"><BookOpen size={18}/></div>
             <div>
@@ -245,7 +266,15 @@ export default function App() {
           </div>
         </section>}
 
-        {profileUsername ? (
+        {selectedSet ? (
+          <SetDetailsPage
+            set={selectedSet}
+            currentUser={currentUser}
+            onBack={() => setSelectedSet(null)}
+            onOpenProfile={openProfile}
+            onNotice={setNotice}
+          />
+        ) : profileUsername ? (
           <ProfilePage
             username={profileUsername}
             friends={friends}
@@ -255,6 +284,7 @@ export default function App() {
             outgoingRequests={outgoingRequests}
             onBack={() => setProfileUsername(null)}
             onOpenProfile={openProfile}
+            onOpenSet={openSet}
             onRequestFriend={requestFriend}
             onRemoveFriendRequest={removeFriendRequest}
             onAcceptFriendRequest={acceptFriendRequest}
@@ -284,6 +314,7 @@ export default function App() {
             notice={notice}
             setNotice={setNotice}
             onOpenProfile={openProfile}
+            onOpenSet={openSet}
           />
         )}
         <footer><span>✿ Made for curious minds.</span><span className="api-status"><i className={apiStatus === "connected" ? "online" : ""}></i>{apiStatus === "connected" ? "API connected" : apiStatus === "demo" ? "Demo content · start the API to connect" : "Connecting to API…"}</span></footer>
