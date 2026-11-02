@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { BookOpen, Search, Swords, Trophy, Users, Sparkles } from "lucide-react";
-import { getFriends, getLeaderboard, getStudySet, getStudySets } from "./api.js";
+import { getAchievements, getChallenges, getFriends, getLeaderboard, getStudySet, getStudySets, getUser } from "./api.js";
 import FriendsPage from "./pages/FriendsPage.jsx";
 import LeaderboardPage from "./pages/LeaderboardPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
@@ -120,6 +120,14 @@ const starterLeaderboard = [
   { username: "shaq", points: 95, color: "pink" },
   { username: "aaron", points: 70, color: "yellow" },
 ];
+const starterAchievements = [
+  { achievement_id: 9, name: "Set explorer", description: "Attempted your first study set.", category: "sets_attempted", requirement: 1 },
+  { achievement_id: 8, name: "Curious mind", description: "Attempted five study sets.", category: "sets_attempted", requirement: 5 },
+  { achievement_id: 7, name: "Point collector", description: "Accumulated 100 points.", category: "points_accumulated", requirement: 100 },
+  { achievement_id: 6, name: "Challenge champion", description: "Won your first challenge.", category: "challenges_won", requirement: 1 },
+  { achievement_id: 5, name: "Friendly face", description: "Made your first friend.", category: "friends", requirement: 1 },
+  { achievement_id: 4, name: "Set maker", description: "Created your first study set.", category: "sets_created", requirement: 1 },
+];
 const friendColors = ["pink", "yellow", "peach", "orange"];
 const navigationItems = [
   ["Discover", Search],
@@ -140,11 +148,19 @@ export default function App() {
   const [friendFilter, setFriendFilter] = useState("All friends");
   const [friends, setFriends] = useState(starterFriends);
   const [requests, setRequests] = useState(starterRequests);
-  const [challenges] = useState(starterChallenges);
+  const [loadedChallenges, setLoadedChallenges] = useState(starterChallenges);
   const [outgoingRequests, setOutgoingRequests] = useState([]);
   const [leaderboard, setLeaderboard] = useState(starterLeaderboard);
+  const [achievements, setAchievements] = useState(starterAchievements);
+  const [currentUserData, setCurrentUserData] = useState({ username: currentUser, points: 120 });
+  const [profileUser, setProfileUser] = useState(null);
   const [profileUsername, setProfileUsername] = useState(null);
   const [selectedSet, setSelectedSet] = useState(null);
+
+  useEffect(() => {
+    getUser(currentUser).then(setCurrentUserData).catch(() => {});
+    getChallenges(currentUser).then(({ challenges: loaded, source }) => setLoadedChallenges(source === "database" ? loaded : starterChallenges)).catch(() => setLoadedChallenges(starterChallenges));
+  }, []);
 
   useEffect(() => {
     getStudySets()
@@ -193,12 +209,15 @@ export default function App() {
     setSearch("");
     setNotice("");
     setFriendFilter("All friends");
+    setProfileUser(null);
   }
 
   function openProfile(username) {
     setProfileUsername(username);
     setSelectedSet(null);
     setNotice("");
+    getUser(username).then(setProfileUser).catch(() => setProfileUser(null));
+    getAchievements(username).then(({ achievements: loadedAchievements }) => setAchievements(loadedAchievements)).catch(() => setAchievements(starterAchievements));
   }
 
   function openSet(set) {
@@ -276,7 +295,7 @@ export default function App() {
           </div>
           <div className="top-actions">
             <div className="points">
-              <span>✦</span> 120 pts
+              <span>✦</span> {currentUserData.points} pts
             </div>
             <button className="avatar small" title="Open your profile" onClick={() => openProfile(currentUser)}>S</button>
           </div>
@@ -326,8 +345,10 @@ export default function App() {
         ) : profileUsername ? (
           <ProfilePage
             username={profileUsername}
+            user={profileUser}
             friends={friends}
             leaderboard={leaderboard}
+            achievements={achievements}
             sets={sets}
             requests={requests}
             outgoingRequests={outgoingRequests}
@@ -355,7 +376,7 @@ export default function App() {
         ) : activeTab === "Leaderboard" ? (
           <LeaderboardPage entries={leaderboard} friends={friends} notice={notice} setNotice={setNotice} onOpenProfile={openProfile} />
         ) : activeTab === "Challenges" ? (
-          <ChallengesPage challenges={challenges} notice={notice} setNotice={setNotice} onOpenProfile={openProfile} />
+          <ChallengesPage challenges={loadedChallenges} notice={notice} setNotice={setNotice} onOpenProfile={openProfile} />
         ) : (
           <StudySetsPage
             activeTab={activeTab}

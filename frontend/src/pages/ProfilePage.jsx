@@ -1,19 +1,39 @@
-import { ArrowLeft, BookOpen, Check, ChevronRight, Star, Trophy, UserPlus, Users, X } from "lucide-react";
+import { useState } from "react";
+import { Award, ArrowLeft, BookOpen, Check, ChevronRight, Swords, Star, Trophy, UserPlus, Users, X } from "lucide-react";
 import { FriendAvatar } from "../components/PagePrimitives.jsx";
 
 const currentUser = "quizlot";
 const profileColors = ["pink", "yellow", "peach", "orange"];
+const achievementTypes = [
+  { key: "sets_attempted", label: "Sets attempted", icon: BookOpen },
+  { key: "points_accumulated", label: "Points accumulated", icon: Star },
+  { key: "challenges_won", label: "Challenges won", icon: Swords },
+  { key: "friends", label: "Friends", icon: Users },
+  { key: "sets_created", label: "Sets created", icon: Award },
+];
 
-export default function ProfilePage({ username, friends, requests, leaderboard, sets, outgoingRequests, onBack, onOpenProfile, onOpenSet, onRequestFriend, onRemoveFriendRequest, onAcceptFriendRequest, onDeclineFriendRequest, onRemoveFriend }) {
+export default function ProfilePage({ username, user, friends, requests, leaderboard, sets, achievements, outgoingRequests, onBack, onOpenProfile, onOpenSet, onRequestFriend, onRemoveFriendRequest, onAcceptFriendRequest, onDeclineFriendRequest, onRemoveFriend }) {
+  const [profileView, setProfileView] = useState("sets");
   const friend = friends.find((item) => item.username === username);
   const incomingRequest = requests.find((item) => item.username === username);
   const outgoingRequest = outgoingRequests.find((item) => item.username === username);
   const standing = leaderboard.findIndex((entry) => entry.username === username);
-  const points = friend?.points ?? leaderboard.find((entry) => entry.username === username)?.points ?? 0;
+  const points = user?.points ?? friend?.points ?? leaderboard.find((entry) => entry.username === username)?.points ?? 0;
   const color = friend?.color ?? leaderboard.find((entry) => entry.username === username)?.color ?? profileColors[username.length % profileColors.length];
   const createdSets = sets.filter((set) => set.owner?.toLowerCase() === username.toLowerCase());
   const isCurrentUser = username === currentUser;
   const relationship = isCurrentUser ? "self" : friend ? "friend" : incomingRequest ? "incoming" : outgoingRequest ? "outgoing" : "none";
+  const achievementRows = achievementTypes.map((type) => ({
+    ...type,
+    achievements: achievements
+      .filter((achievement) => achievement.category === type.key)
+      .sort((first, second) => {
+        const earnedAtDifference = new Date(second.earned_at || 0) - new Date(first.earned_at || 0);
+        return earnedAtDifference || second.achievement_id - first.achievement_id;
+      }),
+  })).filter((type) => type.achievements.length);
+  const featuredAchievements = achievementRows.map(({ label, icon: TypeIcon, achievements: rowAchievements }) => ({ ...rowAchievements[0], typeLabel: label, typeIcon: TypeIcon }));
+  const remainingAchievements = achievementRows.flatMap(({ label, icon: TypeIcon, achievements: rowAchievements }) => rowAchievements.slice(1).map((achievement) => ({ ...achievement, typeLabel: label, typeIcon: TypeIcon })));
 
   return (
     <section className="profile-page">
@@ -24,7 +44,7 @@ export default function ProfilePage({ username, friends, requests, leaderboard, 
         <div className="profile-identity">
           <div className="eyebrow">{isCurrentUser ? "YOUR LEARNING PROFILE" : "QUIZLOT LEARNER"}</div>
           <h2>@{username}</h2>
-          <p>{friend?.email || (isCurrentUser ? "Keep learning, one question at a time." : "This learner is building their Quizlot journey.")}</p>
+          <p>{user?.email || friend?.email || (isCurrentUser ? "Keep learning, one question at a time." : "This learner is building their Quizlot journey.")}</p>
         </div>
         <div className="profile-spark">✦</div>
       </div>
@@ -44,8 +64,12 @@ export default function ProfilePage({ username, friends, requests, leaderboard, 
       </div>}
 
       <div className="profile-sets">
-        <div className="eyebrow">{createdSets.length ? "CREATED STUDY SETS" : `${username.toUpperCase()} DOES NOT HAVE ANY SETS YET`}</div>
-        {createdSets.length ? (
+        <div className="profile-view-tabs" role="tablist" aria-label="Profile content">
+          <button className={profileView === "sets" ? "active" : ""} role="tab" aria-selected={profileView === "sets"} onClick={() => setProfileView("sets")}><BookOpen size={15} /> Created sets</button>
+          <button className={profileView === "achievements" ? "active" : ""} role="tab" aria-selected={profileView === "achievements"} onClick={() => setProfileView("achievements")}><Award size={15} /> Achievements</button>
+        </div>
+        {profileView === "sets" && <div className="eyebrow">{createdSets.length ? "CREATED STUDY SETS" : `${username.toUpperCase()} DOES NOT HAVE ANY SETS YET`}</div>}
+        {profileView === "sets" && createdSets.length ? (
           <div className="set-grid">
             {createdSets.map((set, index) => (
               <article className="set-card" key={set.set_id} onClick={() => onOpenSet(set)} onKeyDown={(event) => event.key === "Enter" && onOpenSet(set)} tabIndex="0">
@@ -69,9 +93,36 @@ export default function ProfilePage({ username, friends, requests, leaderboard, 
               </article>
             ))}
           </div>
+        ) : profileView === "achievements" ? (
+          achievementRows.length ? <div className="achievement-sections">
+            <section>
+              <div className="achievement-section-heading">Top achievements</div>
+              <div className="achievement-grid achievement-featured-grid">
+                {featuredAchievements.map((achievement) => <AchievementCard key={achievement.achievement_id} achievement={achievement} featured />)}
+              </div>
+            </section>
+            {remainingAchievements.length > 0 && <section>
+              <div className="achievement-section-heading">More</div>
+              <div className="achievement-grid">
+                {remainingAchievements.map((achievement) => <AchievementCard key={achievement.achievement_id} achievement={achievement} />)}
+              </div>
+            </section>}
+          </div> : <div className="achievement-empty"><Award size={22} /><span>No achievements earned yet.</span></div>
         ) : null}
       </div>
 
     </section>
+  );
+}
+
+function AchievementCard({ achievement, featured = false }) {
+  const TypeIcon = achievement.typeIcon || Award;
+
+  return (
+    <article className={`achievement-card ${featured ? "featured" : ""}`}>
+      <div className="achievement-art"><TypeIcon size={22} /></div>
+      <div className="achievement-info"><span className="achievement-type">{achievement.typeLabel}</span><h3>{achievement.name}</h3><p>{achievement.description}</p></div>
+      <Check size={15} className="achievement-check" />
+    </article>
   );
 }

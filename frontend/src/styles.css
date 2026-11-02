@@ -1286,7 +1286,58 @@ button {
 .profile-stats strong { font-family: "Nunito", sans-serif; font-size: 17px; }
 .profile-stats span { color: #a1969b; font-size: 10px; }
 .profile-sets { padding-top: 8px; }
+.profile-view-tabs {
+  display: inline-flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  padding: 4px;
+  border: 1px solid #f0e2df;
+  border-radius: 11px;
+  background: #fffaf8;
+}
+.profile-view-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 11px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #a1969b;
+  font-size: 11px;
+  font-weight: 800;
+}
+.profile-view-tabs button:hover { color: #bd587c; }
+.profile-view-tabs button.active { background: #fff; color: #bd587c; box-shadow: 0 2px 6px #8c5e5012; }
 .profile-sets .set-grid { margin-top: 16px; }
+.achievement-sections { display: grid; gap: 24px; }
+.achievement-section-heading { margin-bottom: 10px; color: #806d74; font-size: 11px; font-weight: 800; }
+.achievement-grid { display: grid; grid-template-columns: repeat(auto-fill, 214px); gap: 12px; justify-content: start; }
+.achievement-card {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 144px;
+  box-sizing: border-box;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid #f0e2df;
+  border-radius: 12px;
+  background: #fff;
+}
+.achievement-card.featured { border-color: #efbfd0; box-shadow: 0 4px 12px #8c5e5010; }
+.achievement-art { display: grid; width: 100%; height: 58px; place-items: center; border-radius: 8px; background: #fff0f4; color: #d987a2; }
+.achievement-card:nth-child(2n) .achievement-art { background: #fff7e2; color: #d39a3a; }
+.achievement-card:nth-child(3n) .achievement-art { background: #fff0e5; color: #d47e45; }
+.achievement-info { min-width: 0; padding: 0 3px; }
+.achievement-type { display: block; margin-bottom: 4px; color: #a1969b; font-size: 9px; font-weight: 700; }
+.achievement-card h3 { margin: 0 0 3px; overflow: hidden; font-family: "Nunito", sans-serif; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.achievement-card p { display: -webkit-box; margin: 0; overflow: hidden; color: #8d7b81; font-size: 10px; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.achievement-check { flex-shrink: 0; margin-left: auto; color: #65a875; }
+.achievement-card .achievement-check { position: absolute; top: 14px; right: 14px; }
+.achievement-empty { display: flex; align-items: center; gap: 9px; padding: 20px; border: 1px dashed #eadbd7; border-radius: 13px; color: #a1969b; font-size: 11px; }
 .relationship-stat.relationship-friend svg { color: #65a875; }
 .relationship-stat.relationship-incoming svg { color: #d39a3a; }
 .relationship-stat.relationship-outgoing svg { color: #c9859e; }
@@ -1594,6 +1645,7 @@ footer {
   .set-grid {
     grid-template-columns: 1fr;
   }
+  .achievement-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .set-art {
     height: 110px;
   }
