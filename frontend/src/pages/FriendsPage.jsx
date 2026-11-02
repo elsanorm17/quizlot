@@ -20,7 +20,7 @@ export default function FriendsPage({
     <section className="sets-section friends-section">
       <div className="section-heading">
         <div>
-          <div className="eyebrow">YOUR CIRCLE</div>
+          <div className="eyebrow"><Users size={14} /> YOUR CIRCLE</div>
           <h2>Friends</h2>
           <p>Keep each other curious, motivated, and moving forward.</p>
         </div>

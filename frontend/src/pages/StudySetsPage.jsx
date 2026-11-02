@@ -27,7 +27,7 @@ export default function StudySetsPage({
     <section className="sets-section">
       <div className="section-heading">
         <div>
-          <div className="eyebrow">{activeTab === "My study sets" ? "YOUR COLLECTION" : "FIND YOUR FLOW"}</div>
+          <div className="eyebrow"><BookOpen size={14} /> {activeTab === "My study sets" ? "YOUR COLLECTION" : "FIND YOUR FLOW"}</div>
           <h2>{activeTab === "Discover" ? "Pick your next challenge" : activeTab}</h2>
           <p>{activeTab === "My study sets" ? `${mySets.length} set${mySets.length === 1 ? "" : "s"} created by you.` : "Choose a set, test what you know, and earn those points."}</p>
         </div>
