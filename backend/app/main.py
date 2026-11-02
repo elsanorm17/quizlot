@@ -50,6 +50,7 @@ DEMO_REQUESTS = [
     {"username": "alexlearns", "email": "alex@example.com", "points": 155},
     {"username": "priyaprep", "email": "priya@example.com", "points": 230},
 ]
+DEMO_CHALLENGES = []
 DEMO_LEADERBOARD = [
     {"username": "joe_cool", "points": 420},
     {"username": "charlieBrown", "points": 285},
@@ -58,11 +59,70 @@ DEMO_LEADERBOARD = [
     {"username": "shaq", "points": 95},
     {"username": "aaron", "points": 70},
 ]
+DEMO_ACHIEVEMENTS = [
+    {"achievement_id": 1, "name": "Set explorer", "description": "Attempted your first study set.", "requirement": 1, "category": "sets_attempted"},
+    {"achievement_id": 2, "name": "Curious mind", "description": "Attempted five study sets.", "requirement": 5, "category": "sets_attempted"},
+    {"achievement_id": 3, "name": "Point collector", "description": "Accumulated 100 points.", "requirement": 100, "category": "points_accumulated"},
+    {"achievement_id": 4, "name": "Challenge champion", "description": "Won your first challenge.", "requirement": 1, "category": "challenges_won"},
+    {"achievement_id": 5, "name": "Friendly face", "description": "Made your first friend.", "requirement": 1, "category": "friends"},
+    {"achievement_id": 6, "name": "Set maker", "description": "Created your first study set.", "requirement": 1, "category": "sets_created"},
+]
+DEMO_USER_ACHIEVEMENTS = [
+    {"user_id": 1, "achievement_id": 1},
+    {"user_id": 1, "achievement_id": 2},
+    {"user_id": 1, "achievement_id": 3},
+    {"user_id": 1, "achievement_id": 4},
+    {"user_id": 1, "achievement_id": 5},
+    {"user_id": 1, "achievement_id": 6},
+]
+DEMO_USERS = [
+    {"user_id": 1, "username": "joe_cool", "email": "joe@example.com", "points": 420},
+    {"user_id": 2, "username": "charlieBrown", "email": "charlie@example.com", "points": 285},
+    {"user_id": 3, "username": "woodstock", "email": "woodstock@example.com", "points": 190},
+    {"user_id": 4, "username": "quizlot", "email": "quizlot@example.com", "points": 120},
+    {"user_id": 5, "username": "shaq", "email": "shaq@example.com", "points": 95},
+    {"user_id": 6, "username": "aaron", "email": "aaron@example.com", "points": 70},
+]
 
 
 @app.get("/api/health")
 def health():
     return {"status": "ok", "database_configured": database_configured()}
+
+
+@app.get("/api/users/{username}")
+def get_user(username: str):
+    if not database_configured():
+        user = next((item for item in DEMO_USERS if item["username"].lower() == username.lower()), None)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found.")
+        return {**user, "source": "demo"}
+    try:
+        with get_connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(
+                """
+                SELECT u.user_id, u.username, u.email, u.points,
+                       (SELECT COUNT(*) FROM flashcardSets fs WHERE fs.user_id = u.user_id) AS created_set_count,
+                       (SELECT COUNT(*) FROM quizAttempts qa WHERE qa.user_id = u.user_id) AS attempted_set_count,
+                       (SELECT COUNT(*) FROM friends f WHERE f.user_id = u.user_id OR f.friend_id = u.user_id) AS friend_count,
+                       (SELECT COUNT(*) FROM challenges c WHERE c.status = 'completed'
+                           AND ((c.creator_id = u.user_id AND c.creator_score > c.opponent_score)
+                             OR (c.opponent_id = u.user_id AND c.opponent_score > c.creator_score))) AS challenges_won
+                FROM users u
+                WHERE LOWER(u.username) = LOWER(%s)
+                """,
+                (username,),
+            )
+            user = cursor.fetchone()
+            cursor.close()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found.")
+        return {**user, "source": "database"}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="Could not load user.") from exc
 
 
 @app.get("/api/sets")
@@ -188,3 +248,80 @@ def list_leaderboard(username: str = "quizlot"):
         return {"entries": entries, "source": "database"}
     except Exception as exc:
         raise HTTPException(status_code=503, detail="Could not load leaderboard.") from exc
+
+
+@app.get("/api/achievements")
+def list_achievements(username: str = "quizlot"):
+    if not database_configured():
+        return {"achievements": DEMO_ACHIEVEMENTS, "source": "demo"}
+    try:
+        with get_connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(
+                """
+                SELECT a.achievement_id, a.name, a.description, a.requirement, a.category
+                FROM userAchievements ua
+                JOIN users u ON u.user_id = ua.user_id
+                JOIN achievements a ON a.achievement_id = ua.achievement_id
+                WHERE u.username = %s
+                ORDER BY a.requirement DESC, a.achievement_id DESC
+                """,
+                (username,),
+            )
+            achievements = cursor.fetchall()
+            cursor.close()
+        return {"achievements": achievements, "source": "database"}
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="Could not load achievements.") from exc
+
+
+@app.get("/api/challenges")
+def list_challenges(username: str = "quizlot"):
+    if not database_configured():
+        return {"challenges": DEMO_CHALLENGES, "source": "demo"}
+    try:
+        with get_connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(
+                """
+                SELECT c.challenge_id AS id,
+                       CASE
+                           WHEN c.status = 'pending' AND c.opponent_id = u.user_id THEN 'incoming'
+                           WHEN c.status = 'accepted' THEN 'active'
+                           ELSE c.status
+                       END AS status,
+                       UPPER(COALESCE(fs.title, 'STUDY SET')) AS category,
+                       fs.title,
+                       CONCAT('Challenge on ', fs.title) AS description,
+                       COUNT(f.question_num) AS questions,
+                       CASE WHEN c.creator_id = u.user_id THEN opponent.username ELSE creator.username END AS opponent_username,
+                       CASE WHEN c.creator_id = u.user_id THEN opponent.email ELSE creator.email END AS opponent_email,
+                       c.creator_score, c.opponent_score
+                FROM challenges c
+                JOIN users u ON u.username = %s
+                JOIN users creator ON creator.user_id = c.creator_id
+                JOIN users opponent ON opponent.user_id = c.opponent_id
+                JOIN flashcardSets fs ON fs.set_id = c.set_id
+                LEFT JOIN flashcards f ON f.set_id = fs.set_id
+                WHERE c.creator_id = u.user_id OR c.opponent_id = u.user_id
+                GROUP BY c.challenge_id, c.status, fs.title, u.user_id,
+                         creator.username, creator.email, opponent.username, opponent.email,
+                         c.creator_score, c.opponent_score
+                ORDER BY c.challenge_id DESC
+                """,
+                (username,),
+            )
+            challenges = cursor.fetchall()
+            cursor.close()
+        for challenge in challenges:
+            challenge["statusLabel"] = {
+                "incoming": "Waiting for you",
+                "active": "In progress",
+                "completed": "Completed",
+                "declined": "Declined",
+                "cancelled": "Cancelled",
+            }.get(challenge["status"], challenge["status"].title())
+            challenge["opponent"] = {"username": challenge.pop("opponent_username"), "email": challenge.pop("opponent_email")}
+        return {"challenges": challenges, "source": "database"}
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="Could not load challenges.") from exc

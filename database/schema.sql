@@ -105,6 +105,7 @@ CREATE TABLE IF NOT EXISTS achievements (
     name VARCHAR(80) NOT NULL,
     description TEXT NOT NULL,
     requirement VARCHAR(255) NOT NULL,
+    category ENUM('sets_attempted', 'points_accumulated', 'challenges_won', 'friends', 'sets_created') NOT NULL,
     PRIMARY KEY (achievement_id),
     UNIQUE KEY uq_achievements_name (name)
 ) ENGINE=InnoDB;
